@@ -5,7 +5,8 @@ A Google Apps Script automation that tracks your TTRPG sessions from Google Cale
 ## Features
 
 - Monitors a specific Google Calendar for TTRPG session events
-- Parses campaign name, system, and players from event data
+- Parses campaign name, system, players, and session type from event data
+- Collects any additional metadata into a single column
 - Automatically logs sessions to a Google Sheet
 - Runs daily at midnight via trigger
 
@@ -13,19 +14,34 @@ A Google Apps Script automation that tracks your TTRPG sessions from Google Cale
 
 Create calendar events with the following format:
 
-**Event Title:** Campaign name (e.g., "Curse of Strahd")
+**Event Title:** `Campaign Name: <anything>` (e.g., "Curse of Strahd: #15")
 
-**Event Description:**
+Only the part before the colon is used as the campaign name.
+
+**Event Description** (key-value pairs, one per line):
 ```
 System: D&D 5e
 Players: Alice, Bob, Charlie
+Type: Player
+Location: Roll20
+DM: Bob
 ```
+
+### Canonical Fields
+
+| Field | Description |
+|-------|-------------|
+| System | The TTRPG system (e.g., D&D 5e, Pathfinder 2e, Call of Cthulhu) |
+| Players | Comma-separated list of players |
+| Type | One of: `GM`, `Player`, `Solo`, `GMless` |
+
+Any additional key:value pairs (like `Location`, `DM` above) are combined into the "Additional Details" column.
 
 ## Sheet Output
 
-| Date | Campaign Name | System | Players |
-|------|---------------|--------|---------|
-| 2024-01-15 | Curse of Strahd | D&D 5e | Alice, Bob, Charlie |
+| Date | Campaign Name | System | Players | Type | Additional Details |
+|------|---------------|--------|---------|------|-------------------|
+| 2024-01-15 | Curse of Strahd | D&D 5e | Alice, Bob, Charlie | Player | Location: Roll20; DM: Bob |
 
 ## Setup Instructions
 
@@ -116,12 +132,14 @@ This checks for events on the current day and logs them.
 
 ### Events Not Being Logged
 
-- Check that your event description uses the correct format:
+- Check that your event description uses key:value format, one per line:
   ```
   System: Your System
   Players: Player1, Player2
+  Type: Player
   ```
 - Keys are case-insensitive (`system:` and `System:` both work)
+- Valid Type values: `GM`, `Player`, `Solo`, `GMless`
 
 ### View Execution Logs
 

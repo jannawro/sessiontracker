@@ -66,16 +66,23 @@ function getCalendarEvents(date) {
   return calendar.getEvents(startOfDay, endOfDay);
 }
 
+// Canonical fields parsed from description
+const CANONICAL_FIELDS = ['system', 'players', 'type'];
+
+// Valid values for Type field
+const VALID_TYPES = ['GM', 'Player', 'Solo', 'GMless'];
+
 /**
  * Parses key-value pairs from the event description.
- * Expected format:
- *   System: D&D 5e
- *   Players: Alice, Bob, Charlie
+ * Canonical fields (System, Players, Type) are extracted separately.
+ * All other key:value pairs go into additionalDetails.
  */
 function parseEventDescription(description) {
   const result = {
     system: '',
-    players: ''
+    players: '',
+    type: '',
+    additionalDetails: ''
   };
 
   if (!description) {
@@ -86,22 +93,44 @@ function parseEventDescription(description) {
   const cleanDescription = description.replace(/<[^>]*>/g, '\n').trim();
 
   const lines = cleanDescription.split('\n');
+  const extras = [];
 
   lines.forEach(line => {
     const colonIndex = line.indexOf(':');
     if (colonIndex === -1) return;
 
-    const key = line.substring(0, colonIndex).trim().toLowerCase();
+    const key = line.substring(0, colonIndex).trim();
+    const keyLower = key.toLowerCase();
     const value = line.substring(colonIndex + 1).trim();
 
-    if (key === 'system') {
+    if (!key || !value) return;
+
+    if (keyLower === 'system') {
       result.system = value;
-    } else if (key === 'players') {
+    } else if (keyLower === 'players') {
       result.players = value;
+    } else if (keyLower === 'type') {
+      result.type = validateType(value);
+    } else {
+      extras.push(`${key}: ${value}`);
     }
   });
 
+  result.additionalDetails = extras.join('; ');
   return result;
+}
+
+/**
+ * Validates and normalizes the Type field.
+ * Returns the value if valid, empty string otherwise.
+ */
+function validateType(value) {
+  const normalized = VALID_TYPES.find(t => t.toLowerCase() === value.toLowerCase());
+  if (normalized) {
+    return normalized;
+  }
+  Logger.log(`Warning: Invalid type "${value}". Valid types: ${VALID_TYPES.join(', ')}`);
+  return value;
 }
 
 /**
@@ -114,14 +143,16 @@ function writeToSheet(sessionData) {
     sessionData.date,
     sessionData.campaignName,
     sessionData.system,
-    sessionData.players
+    sessionData.players,
+    sessionData.type,
+    sessionData.additionalDetails
   ];
 
   sheet.appendRow(row);
 }
 
 /**
- * Gets the target sheet, creating it with headers if it doesn't exist.
+ * Gets the target sheet, creating it with canonical headers if it doesn't exist.
  */
 function getOrCreateSheet() {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -134,7 +165,7 @@ function getOrCreateSheet() {
 
   if (!sheet) {
     sheet = spreadsheet.insertSheet(SHEET_NAME);
-    sheet.appendRow(['Date', 'Campaign Name', 'System', 'Players']);
+    sheet.appendRow(['Date', 'Campaign Name', 'System', 'Players', 'Type', 'Additional Details']);
     sheet.getRange('1:1').setFontWeight('bold');
     Logger.log(`Created new sheet: ${SHEET_NAME}`);
   }
