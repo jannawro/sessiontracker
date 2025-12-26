@@ -14,3 +14,9 @@ const SPREADSHEET_ID = 'your-spreadsheet-id';
 
 // The name of the sheet tab within the spreadsheet
 const SHEET_NAME = 'Sessions';
+
+// Optional prefix to filter calendar events
+// Only events with titles starting with this prefix will be tracked
+// The prefix will be stripped from the campaign name
+// Set to empty string '' to track all events (no filtering)
+const EVENT_PREFIX = '';

@@ -9,6 +9,7 @@ A Google Apps Script automation that tracks your TTRPG sessions from Google Cale
 - Collects any additional metadata into a single column
 - Automatically logs sessions to a Google Sheet
 - Runs daily at midnight via trigger
+- Optional prefix filtering to track only specific events
 
 ## Event Format
 
@@ -79,7 +80,26 @@ Edit `Config.gs` and replace the placeholder values:
 const CALENDAR_ID = 'your-calendar-id@group.calendar.google.com';
 const SPREADSHEET_ID = 'your-spreadsheet-id';
 const SHEET_NAME = 'Sessions';
+const EVENT_PREFIX = '';  // Optional: filter events by prefix
 ```
+
+#### Event Prefix Filtering (Optional)
+
+If your calendar contains mixed events and you only want to track specific ones, set `EVENT_PREFIX` to filter events by their title prefix. Only events starting with this prefix will be logged, and the prefix will be stripped from the campaign name.
+
+**Example:**
+```javascript
+const EVENT_PREFIX = '[TTRPG] ';
+```
+
+| Calendar Event Title | Tracked? | Campaign Name in Sheet |
+|---------------------|----------|------------------------|
+| `[TTRPG] Curse of Strahd: #15` | Yes | Curse of Strahd |
+| `[TTRPG] Pathfinder: Session 3` | Yes | Pathfinder |
+| `Work Meeting` | No | — |
+| `Dentist Appointment` | No | — |
+
+Leave `EVENT_PREFIX` as an empty string (`''`) to track all events on the calendar.
 
 ### 6. Authorize the Script
 

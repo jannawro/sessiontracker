@@ -18,12 +18,23 @@ function checkTodaySessions() {
     return;
   }
 
-  Logger.log(`Found ${events.length} session(s) today.`);
+  Logger.log(`Found ${events.length} event(s) today.`);
 
-  events.forEach(event => {
+  // Filter events by prefix if configured
+  const filteredEvents = filterEventsByPrefix(events);
+
+  if (filteredEvents.length === 0) {
+    Logger.log('No matching sessions found after prefix filtering.');
+    return;
+  }
+
+  Logger.log(`${filteredEvents.length} session(s) match the prefix filter.`);
+
+  filteredEvents.forEach(event => {
+    const title = stripPrefix(event.getTitle());
     const sessionData = {
       date: formatDate(today),
-      campaignName: parseCampaignName(event.getTitle()),
+      campaignName: parseCampaignName(title),
       ...parseEventDescription(event.getDescription())
     };
 
@@ -64,6 +75,37 @@ function getCalendarEvents(date) {
   endOfDay.setHours(23, 59, 59, 999);
 
   return calendar.getEvents(startOfDay, endOfDay);
+}
+
+/**
+ * Filters events by the configured prefix.
+ * If EVENT_PREFIX is empty, returns all events.
+ */
+function filterEventsByPrefix(events) {
+  if (!EVENT_PREFIX) {
+    return events;
+  }
+
+  return events.filter(event => {
+    const title = event.getTitle() || '';
+    return title.startsWith(EVENT_PREFIX);
+  });
+}
+
+/**
+ * Strips the configured prefix from a title.
+ * If EVENT_PREFIX is empty, returns the title unchanged.
+ */
+function stripPrefix(title) {
+  if (!EVENT_PREFIX || !title) {
+    return title || '';
+  }
+
+  if (title.startsWith(EVENT_PREFIX)) {
+    return title.substring(EVENT_PREFIX.length).trim();
+  }
+
+  return title;
 }
 
 // Canonical fields parsed from description
