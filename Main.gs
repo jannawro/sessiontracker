@@ -241,11 +241,11 @@ function setupDailyTrigger() {
   // Create new daily trigger at midnight
   ScriptApp.newTrigger('checkTodaySessions')
     .timeBased()
-    .atHour(0)
+    .atHour(23)
     .everyDays(1)
     .create();
 
-  Logger.log('Daily trigger set up successfully. Will run at midnight.');
+  Logger.log('Daily trigger set up successfully. Will run at 11 PM.');
 }
 
 /**
